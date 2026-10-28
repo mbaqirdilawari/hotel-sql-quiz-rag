@@ -54,34 +54,57 @@ def extract_sql(text):
     return sql
 
 
+REQUEST_TIMEOUT_MS = 45_000  # give up on one model after 45 seconds
+
+
+def _make_client(genai, types, api_key):
+    """Gemini client with a timeout and at most one retry, so a busy model
+    fails fast and the next model is tried instead of waiting for minutes."""
+    try:
+        options = types.HttpOptions(
+            timeout=REQUEST_TIMEOUT_MS, retry_options=types.HttpRetryOptions(attempts=2)
+        )
+        return genai.Client(api_key=api_key, http_options=options)
+    except (AttributeError, TypeError):  # older or newer SDK without these options
+        return genai.Client(api_key=api_key)
+
+
 def generate_sql(api_key, question, retrieved, models=None):
-    """Ask Gemini for SQL. Returns (sql, model_used, prompt)."""
+    """Ask Gemini for SQL. Returns (sql, model_used, prompt, seconds)."""
     if not api_key:
         raise GenerationError("GEMINI_API_KEY is not set, so SQL cannot be generated.")
+
+    import time
 
     from google import genai
     from google.genai import errors, types
 
-    client = genai.Client(api_key=api_key)
+    client = _make_client(genai, types, api_key)
     prompt = build_prompt(question, retrieved)
     config = types.GenerateContentConfig(temperature=0.0, system_instruction=SYSTEM_INSTRUCTION)
 
     last_error = None
     for model in [m for m in (models or DEFAULT_MODELS) if m]:
+        started = time.monotonic()
         try:
             response = client.models.generate_content(model=model, contents=prompt, config=config)
         except errors.APIError as exc:
             code = getattr(exc, "code", None)
-            if code == 429:
-                raise GenerationError(
-                    "The Gemini free tier limit was reached. Wait a minute and try again."
-                ) from exc
+            print(f"[gemini] {model} failed after {time.monotonic() - started:.1f}s: {code}", flush=True)
             if code in (400, 401, 403) and "API key" in str(exc):
                 raise GenerationError(f"Gemini rejected the API key: {exc}") from exc
-            last_error = exc  # for example, model not found: try the next one
+            last_error = exc  # model missing, busy or rate-limited: try the next one
             continue
+        except Exception as exc:  # timeout or network problem: try the next one
+            print(f"[gemini] {model} error after {time.monotonic() - started:.1f}s: {exc}", flush=True)
+            last_error = exc
+            continue
+        seconds = time.monotonic() - started
+        print(f"[gemini] {model} answered in {seconds:.1f}s", flush=True)
         sql = extract_sql(response.text or "")
         if sql:
-            return sql, model, prompt
+            return sql, model, prompt, seconds
         last_error = GenerationError(f"{model} returned an empty answer.")
+    if getattr(last_error, "code", None) == 429:
+        raise GenerationError("The Gemini free tier limit was reached. Wait a minute and try again.")
     raise GenerationError(f"No Gemini model could generate SQL. Last error: {last_error}")
