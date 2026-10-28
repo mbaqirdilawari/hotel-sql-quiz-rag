@@ -52,6 +52,18 @@ The first question after the app wakes up takes a little longer, because ChromaD
 
 ![Executed SQL, result table and validation](docs/screenshot_validation.png)
 
+**Test results on the live app (28 October 2026)**
+
+| Quiz question | What it tests | Top retrieved knowledge | Generated SQL result | Validation |
+|---|---|---|---|---|
+| 1 | Filtering | `schema_hotels`, star-rating rule, Karachi hotels example | Grand Palace, Margalla Heights | ✅ Correct |
+| 2 | `GROUP BY` and `COUNT` | `schema_hotels`, single-winner and counting rules, rooms-per-hotel example | Lahore 3, Islamabad 2, Karachi 2, Hunza 1 | ✅ Correct |
+| 3 | Reading a query | "What does this query return?" rule, `MAX(nights)` example | 18 | ✅ Correct |
+| 4 | Joining two tables | `schema_rooms`, prices rule, Deluxe-in-Islamabad example | Deluxe 172.50, Standard 97.50, Suite 385.00 | ✅ Correct |
+| 5 | Joining three tables | relationships schema, revenue and join-path rules, revenue-per-city example | Grand Palace, 7070 | ✅ Correct |
+
+Retrieval took under a second and Gemini answered in 1 to 2 seconds for each question.
+
 ---
 
 ## RAG architecture

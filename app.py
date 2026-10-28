@@ -124,7 +124,11 @@ with rag_tab:
         st.warning("You are signed out. Sign in using the sidebar to generate SQL.")
 
     if signed_in and generate:
-        result = {"question": user_question.strip(), "question_id": question["question_id"] if question else None}
+        result = {
+            "choice": choice,
+            "question": user_question.strip(),
+            "question_id": question["question_id"] if question else None,
+        }
         try:
             with st.spinner("Step 1: retrieving relevant knowledge from ChromaDB..."):
                 started = time.monotonic()
@@ -164,6 +168,8 @@ with rag_tab:
         st.session_state.rag_result = result
 
     result = st.session_state.get("rag_result") if signed_in else None
+    if result and result.get("choice") != choice:
+        result = None  # the shown answer belongs to a different question
     if result:
         st.divider()
         if "error" in result:
