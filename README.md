@@ -121,7 +121,7 @@ ChromaDB runs inside the app (an in-memory collection) and embeds documents with
 
 **Google Gemini**, through the official `google-genai` Python SDK and a Google AI Studio API key.
 
-- The app asks for `gemini-flash-latest` (Google's current Flash model) and falls back to `gemini-2.5-flash` and `gemini-3.1-flash-lite` if a model is unavailable. A specific model can be set with the `GEMINI_MODEL` setting.
+- The app uses `gemini-3.1-flash-lite`, which is on the free tier and usually answers in about a second. If it is unavailable, it falls back to `gemini-flash-latest` (Google's current Flash model) and then `gemini-3-flash-preview`. Each model gets at most 45 seconds before the next one is tried. A specific model can be set with the `GEMINI_MODEL` setting.
 - Temperature is 0, so the same question gives the same SQL.
 - A system instruction tells Gemini to use only the retrieved context and to reply with one read-only PostgreSQL `SELECT` statement.
 

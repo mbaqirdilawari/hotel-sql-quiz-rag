@@ -2,10 +2,11 @@
 
 import re
 
-# Tried in order until one works. The first entry can be overridden with
-# the GEMINI_MODEL setting; "gemini-flash-latest" always points at Google's
-# current Flash model, and the others are fallbacks with a free tier.
-DEFAULT_MODELS = ["gemini-flash-latest", "gemini-2.5-flash", "gemini-3.1-flash-lite"]
+# Tried in order until one works. gemini-3.1-flash-lite is fast (about one
+# second) and on the free tier; "gemini-flash-latest" always points at
+# Google's current Flash model and is the fallback. A specific model can be
+# put first with the GEMINI_MODEL setting.
+DEFAULT_MODELS = ["gemini-3.1-flash-lite", "gemini-flash-latest", "gemini-3-flash-preview"]
 
 SYSTEM_INSTRUCTION = (
     "You are a PostgreSQL expert who turns questions about a hotel bookings "
