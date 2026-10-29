@@ -219,9 +219,3 @@ python -m pytest -v tests
 ```
 
 **5. Deploy.** On Streamlit Community Cloud, create an app from this repo with main file `app.py` and Python 3.12, and paste the `.env` values into **Advanced settings**, **Secrets** in TOML format (`NAME = "value"`).
-
----
-
-## How AI was used
-
-This was an AI-assisted assignment. I used Claude (Anthropic) as a coding assistant to design the RAG pipeline and knowledge documents, write the code, tests and this README, and to set up the repository and Streamlit deployment through my browser. I chose the approach (Gemini, ChromaDB, a new repo that extends Week 7), created and handled all credentials myself (the Gemini API key and the Streamlit secrets were entered by me, not by the assistant), and reviewed the finished app before submitting.
